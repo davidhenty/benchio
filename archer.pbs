@@ -1,0 +1,30 @@
+#!/bin/bash --login
+
+#PBS -A d171
+#PBS -N benchio
+#PBS -l select=8
+#PBS -l walltime=00:10:00
+#PBS -j oe
+
+# change directory to where the job was submitted from
+
+cd $PBS_O_WORKDIR
+
+# ensure we have the correct modules loaded
+
+module load cray-hdf5-parallel
+module load cray-netcdf-hdf5parallel
+
+# Optionally enable MPI-IO stats
+# export MPICH_MPIIO_STATS=1
+
+echo "Starting job $PBS_JOBID at `date`"
+
+for p in 24 48 96 192
+do
+
+  aprun -n $p ./benchio
+
+done
+
+echo "Finished job $PBS_JOBID at `date`"

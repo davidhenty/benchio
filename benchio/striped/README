@@ -1,0 +1,5 @@
+This is the directory for testing IO rates when the file is written
+using a small number of stripes, e.g. 2.
+
+This directory should be set to have a small number of stripes,
+e.g. for 2 stripes use: lfs setstripe -c 2 striped

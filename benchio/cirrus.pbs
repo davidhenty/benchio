@@ -1,0 +1,38 @@
+#!/bin/bash --login
+
+#PBS -A d171
+#PBS -N benchio
+#PBS -l select=6:ncpus=36
+#PBS -l walltime=00:10:00
+#PBS -l place=excl
+#PBS -j oe
+
+# change directory to where the job was submitted from
+
+cd $PBS_O_WORKDIR
+
+# ensure we have the correct modules loaded
+
+module unload mpt
+module unload intel-compilers-18
+
+module load intel-compilers-17
+module load intel-mpi-17
+module load netcdf-parallel/4.5.0-intel17
+module load hdf5parallel/1.10.1-intel17-intel-mpi
+
+# set some magic environment variables so Intel MPI works with Lustre
+
+export I_MPI_EXTRA_FILESYSTEM=on
+export I_MPI_EXTRA_FILESYSTEM_LIST=lustre
+
+echo "Starting job $PBS_JOBID at `date`"
+
+for p in 36 72 144 216
+do
+
+mpirun -ppn 36 -n $p ./benchio
+
+done
+
+echo "Finished job $PBS_JOBID at `date`"

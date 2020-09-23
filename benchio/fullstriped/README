@@ -1,5 +1,0 @@
-This is the directory for testing IO rates when the file is striped
-across many OSTs, i.e. the file system uses multiple write streams.
-
-This directory should be set to have the maximum number of stripes
-with the Lustre command: lfs setstripe -c -1 fullstriped

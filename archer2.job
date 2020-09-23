@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# Slurm job options (name, compute nodes, job time)
+#SBATCH --job-name=benchio
+#SBATCH --output=%x-%j.out
+#SBATCH --nodes=1
+#SBATCH --tasks-per-node=128
+#SBATCH --cpus-per-task=1
+# Replace [budget code] below with your budget code (e.g. t01)
+#SBATCH --account=z19
+
+module load cray-hdf5-parallel
+module load cray-netcdf-hdf5parallel
+
+# Set the number of threads to 1
+#   This prevents any threaded system libraries from automatically
+#   using threading.
+
+export OMP_NUM_THREADS=1
+
+# Launch the parallel job
+
+srun --unbuffered --cpu-bind=cores ./benchio

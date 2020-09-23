@@ -2,9 +2,9 @@ MF=	Makefile-archer
 
 # Cirrus
 
-# You will need these modules:
-# cray-hdf5-parallel
-# load cray-netcdf-hdf5parallel
+# You will need these to load some modules:
+# module load cray-hdf5-parallel
+# module load cray-netcdf-hdf5parallel
 
 FC=	ftn
 FFLAGS=

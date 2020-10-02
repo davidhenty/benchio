@@ -19,4 +19,11 @@ Note that, before running the benchmark, you *must* set the LFS striping on the 
   
  The code uses four IO methods, and for each of them writes to the three directories in turn.  The IO methods are:
  
+ 1. Serial IO using Fortran binary unformatted `write` with `access = stream`
+ 2. MPI-IO using native (i.e. binary) format and collective IO
+ 3. HDF5 collective IO
+ 4. NetCDF collective IO
  
+ Note that the serial is designed to give a baseline IO figure. For simplicity, and to ensure it writes the same amount of data, rank 0 writes out its
+ own local array `size` times in succession. Unlike the parallel IO formats, the contents of the file will *not* be a linearly increasing set of
+ values 1, 2, 3, ..., l1xl2xl3.

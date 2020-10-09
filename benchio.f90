@@ -22,9 +22,9 @@ program benchio
 ! Set local array size - global sizes l1, l2 and l3 are scaled
 ! by number of processes in each dimension
 
-  integer, parameter :: n1 = 128
-  integer, parameter :: n2 = 128
-  integer, parameter :: n3 = 128
+  integer, parameter :: n1 = 256
+  integer, parameter :: n2 = 256
+  integer, parameter :: n3 = 256
 
   integer :: i1, i2, i3, j1, j2, j3, l1, l2, l3, p1, p2, p3
 
@@ -34,12 +34,14 @@ program benchio
   integer, dimension(ndim) :: dims, coords
 
   integer, parameter :: iounit = 12
-  integer, parameter :: mib = 1024*1024
+  integer, parameter :: kib = 1024
+  integer, parameter :: mib = kib*kib
+  integer, parameter :: gib = kib*mib
 
   logical :: reorder = .false.
   logical, dimension(ndim) :: periods = [.false., .false., .false.]
 
-  double precision :: t0, t1, time, iorate, mibdata
+  double precision :: t0, t1, time, iorate, gibdata
 
   stripestring(1) = 'unstriped'
   stripestring(2) = 'striped'
@@ -88,7 +90,7 @@ program benchio
 
   call MPI_Type_size(MPI_DOUBLE_PRECISION, dblesize, ierr)
 
-  mibdata = float(dblesize*n1*n2*n3)*float(p1*p2*p3)/float(mib)
+  gibdata = float(dblesize*n1*n2*n3)*float(p1*p2*p3)/float(gib)
 
   if (rank == 0) then
      write(*,*)
@@ -100,7 +102,7 @@ program benchio
      write(*,*) 'Array size is   (', n1, ', ', n2, ', ', n3, ')'
      write(*,*) 'Global size is  (', l1, ', ', l2, ', ', l3, ')'
      write(*,*)
-     write(*,*) 'Total amount of data = ', mibdata, ' MiB'
+     write(*,*) 'Total amount of data = ', gibdata, ' GiB'
      write(*,*)
      write(*,*) 'Clock resolution is ', benchtick()*1.0e6, ', usecs'
   end if
@@ -146,9 +148,9 @@ program benchio
      do istriping = 1, numstriping
 
         filename = trim(stripestring(istriping))//'/'//trim(iolayername(iolayer))
-        ! Multi IO is special as filename is rank-specific
-
         suffix = ""
+
+        ! Multi IO is special as filename is rank-specific
 
         if (iolayer == iolayermulti) then
            write(suffix,fmt="(i6.6)") rank
@@ -192,10 +194,10 @@ program benchio
         t1 = benchtime()
 
         time = t1 - t0
-        iorate = mibdata/time
+        iorate = gibdata/time
 
         if (rank == 0) then
-           write(*,*) 'time = ', time, ', rate = ', iorate, ' MiB/s'
+           write(*,*) 'time = ', time, ', rate = ', iorate, ' GiB/s'
         end if
 
         if (iolayer == iolayermulti) then

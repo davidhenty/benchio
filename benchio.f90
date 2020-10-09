@@ -8,7 +8,7 @@ program benchio
 
   implicit none
 
-  integer, parameter :: numiolayer = 3
+  integer, parameter :: numiolayer = 5
   integer, parameter :: numstriping = 3
   integer, parameter :: maxlen = 64
 
@@ -41,24 +41,25 @@ program benchio
 
   double precision :: t0, t1, time, iorate, mibdata
 
-  iostring(1) = 'Serial'
-  iostring(2) = 'MPI-IO'
-  iostring(3) = ' HDF5'
-  iostring(4) = 'NetCDF'
-
-  iostring(3) = ' Multi'
-  iolayermulti = 3
-
-  iolayername(1) = 'serial'
-  iolayername(2) = 'mpiio'
-  iolayername(3) = 'hdf5'
-  iolayername(4) = 'netcdf'
-
-  iolayername(3) = 'multi'
-
   stripestring(1) = 'unstriped'
   stripestring(2) = 'striped'
   stripestring(3) = 'fullstriped'
+
+! Multi is special as it creates many files so need to record this
+
+  iolayermulti = 2
+
+  iostring(1) = 'Serial'
+  iostring(2) = ' Multi'
+  iostring(3) = 'MPI-IO'
+  iostring(4) = ' HDF5 '
+  iostring(5) = 'NetCDF'
+
+  iolayername(1) = 'serial'
+  iolayername(2) = 'multi'
+  iolayername(3) = 'mpiio'
+  iolayername(4) = 'hdf5'
+  iolayername(5) = 'netcdf'
 
   call MPI_Init(ierr)
 
@@ -170,15 +171,15 @@ program benchio
            call serialwrite(filename, iodata, n1, n2, n3, cartcomm)
 
         case(2)
-           call mpiiowrite(filename, iodata, n1, n2, n3, cartcomm)
-
-!        case(3)
-!           call hdf5write(filename, iodata, n1, n2, n3, cartcomm)
-
-        case(3)
            call multiwrite(filename, iodata, n1, n2, n3, cartcomm)
 
+        case(3)
+           call mpiiowrite(filename, iodata, n1, n2, n3, cartcomm)
+
         case(4)
+           call hdf5write(filename, iodata, n1, n2, n3, cartcomm)
+
+        case(5)
            call netcdfwrite(filename, iodata, n1, n2, n3, cartcomm)
 
         case default

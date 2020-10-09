@@ -2,21 +2,22 @@ program benchio
 
   use benchclock
   use mpiio
+  use ioserial
   use iohdf5
   use ionetcdf
 
   implicit none
 
-  integer, parameter :: numiolayer = 4
+  integer, parameter :: numiolayer = 3
   integer, parameter :: numstriping = 3
   integer, parameter :: maxlen = 64
 
   character*(maxlen), dimension(numiolayer)  :: iostring, iolayername
   character*(maxlen), dimension(numstriping) :: stripestring
 
-  character*(maxlen) :: filename
+  character*(maxlen) :: filename, suffix
 
-  integer :: iolayer, istriping
+  integer :: iolayer, istriping, iolayermulti
 
 ! Set local array size - global sizes l1, l2 and l3 are scaled
 ! by number of processes in each dimension
@@ -45,10 +46,15 @@ program benchio
   iostring(3) = ' HDF5'
   iostring(4) = 'NetCDF'
 
-  iolayername(1) = 'serial.dat'
-  iolayername(2) = 'mpiio.dat'
-  iolayername(3) = 'hdf5.dat'
-  iolayername(4) = 'netcdf.dat'
+  iostring(3) = ' Multi'
+  iolayermulti = 3
+
+  iolayername(1) = 'serial'
+  iolayername(2) = 'mpiio'
+  iolayername(3) = 'hdf5'
+  iolayername(4) = 'netcdf'
+
+  iolayername(3) = 'multi'
 
   stripestring(1) = 'unstriped'
   stripestring(2) = 'striped'
@@ -139,7 +145,17 @@ program benchio
      do istriping = 1, numstriping
 
         filename = trim(stripestring(istriping))//'/'//trim(iolayername(iolayer))
+        ! Multi IO is special as filename is rank-specific
 
+        suffix = ""
+
+        if (iolayer == iolayermulti) then
+           write(suffix,fmt="(i6.6)") rank
+        end if
+           
+        suffix = trim(suffix)//".dat"
+        filename = trim(filename)//suffix
+        
         if (rank == 0) then
            write(*,*) 'Writing to ', filename
         end if
@@ -150,13 +166,17 @@ program benchio
         select case (iolayer)
 
         case(1)
+
            call serialwrite(filename, iodata, n1, n2, n3, cartcomm)
 
         case(2)
            call mpiiowrite(filename, iodata, n1, n2, n3, cartcomm)
 
+!        case(3)
+!           call hdf5write(filename, iodata, n1, n2, n3, cartcomm)
+
         case(3)
-           call hdf5write(filename, iodata, n1, n2, n3, cartcomm)
+           call multiwrite(filename, iodata, n1, n2, n3, cartcomm)
 
         case(4)
            call netcdfwrite(filename, iodata, n1, n2, n3, cartcomm)
@@ -175,7 +195,12 @@ program benchio
 
         if (rank == 0) then
            write(*,*) 'time = ', time, ', rate = ', iorate, ' MiB/s'
+        end if
+
+        if (iolayer == iolayermulti) then
            call fdelete(filename)
+        else
+           if (rank == 0) call fdelete(filename)
         end if
 
      end do
@@ -192,18 +217,3 @@ program benchio
   call MPI_Finalize(ierr)
   
 end program benchio
-
-subroutine fdelete(filename)
-
-  implicit none
-
-  character *(*) :: filename
-  integer, parameter :: iounit = 15
-  integer :: stat
-
-  write(*,*) 'Deleting: ', filename
-
-  open(unit=iounit, iostat=stat, file=filename, status='old')
-  if (stat.eq.0) close(unit=iounit, status='delete')
-
-end subroutine fdelete

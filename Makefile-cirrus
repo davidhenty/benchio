@@ -8,15 +8,17 @@ MF=	Makefile-cirrus
 # netcdf-parallel/4.5.0-intel17
 # hdf5parallel/1.10.1-intel17-intel-mpi
 
-FC=	mpiifort
-FFLAGS=
-LFLAGS=-lhdf5_fortran -lnetcdff -lnetcdf
+FC=	mpif90
+FFLAGS=	-fc=ifort
+LFLAGS=	-L /lustre/sw/hdf5parallel/1.10.6-intel18-mpt222/lib -lnetcdff -lhdf5_fortran
+#LFLAGS=		-lnetcdff -lhdf5_fortran
 
 EXE=	benchio
 
 SRC= \
 	benchio.f90 \
 	mpiio.f90 \
+	serial.f90 \
 	netcdf.f90 \
 	hdf5.f90 \
 	benchclock.f90
@@ -41,7 +43,7 @@ $(EXE):	$(OBJ)
 
 $(OBJ):	$(MF)
 
-benchio.o: mpiio.o benchclock.o netcdf.o hdf5.o
+benchio.o: serial.o mpiio.o benchclock.o netcdf.o hdf5.o
 
 clean:
 	rm -f $(OBJ) $(EXE) core

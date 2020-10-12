@@ -1,0 +1,50 @@
+MF=	Makefile-archer
+
+# Cirrus
+
+# You will need these to load some modules:
+# module load cray-hdf5-parallel
+# module load cray-netcdf-hdf5parallel
+
+FC=	ftn
+FFLAGS=
+LFLAGS=
+
+EXE=	benchio
+
+SRC= \
+	benchio.f90 \
+	mpiio.f90 \
+	serial.f90 \
+	netcdf.f90 \
+	hdf5.f90 \
+	benchclock.f90
+
+
+#
+# No need to edit below this line
+#
+
+.SUFFIXES:
+.SUFFIXES: .f90 .o
+
+OBJ=	$(SRC:.f90=.o)
+
+.f90.o:
+	$(FC) $(FFLAGS) -c $<
+
+all:	$(EXE)
+
+$(EXE):	$(OBJ)
+	$(FC) $(FFLAGS) -o $@ $(OBJ) $(LFLAGS)
+
+$(OBJ):	$(MF)
+
+benchio.o: serial.o mpiio.o benchclock.o netcdf.o hdf5.o
+
+clean:
+	rm -f $(OBJ) $(EXE) core
+
+tar:
+	tar --exclude-vcs -cvf $(EXE).tar $(MF) $(SRC) benchio.pbs \
+		defstriped/README striped/README unstriped/README

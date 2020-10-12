@@ -3,11 +3,13 @@
 # Slurm job options (name, compute nodes, job time)
 #SBATCH --job-name=benchio
 #SBATCH --output=%x-%j.out
-#SBATCH --nodes=1
+#SBATCH --nodes=2
 #SBATCH --tasks-per-node=128
 #SBATCH --cpus-per-task=1
 # Replace [budget code] below with your budget code (e.g. t01)
 #SBATCH --account=z19
+#SBATCH --qos=standard
+#SBATCH --partition=standard
 
 module load cray-hdf5-parallel
 module load cray-netcdf-hdf5parallel
@@ -17,6 +19,8 @@ module load cray-netcdf-hdf5parallel
 #   using threading.
 
 export OMP_NUM_THREADS=1
+
+ulimit -s unlimited
 
 # Launch the parallel job
 

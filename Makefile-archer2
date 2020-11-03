@@ -7,7 +7,7 @@ MF=	Makefile-archer
 # module load cray-netcdf-hdf5parallel
 
 FC=	ftn
-FFLAGS=
+FFLAGS=	-O3
 LFLAGS=
 
 EXE=	benchio
@@ -18,7 +18,7 @@ SRC= \
 	serial.f90 \
 	netcdf.f90 \
 	hdf5.f90 \
-	benchclock.f90
+	benchutil.f90
 
 
 #
@@ -40,10 +40,10 @@ $(EXE):	$(OBJ)
 
 $(OBJ):	$(MF)
 
-benchio.o: serial.o mpiio.o benchclock.o netcdf.o hdf5.o
+benchio.o: serial.o mpiio.o benchutil.o netcdf.o hdf5.o
 
 clean:
-	rm -f $(OBJ) $(EXE) core
+	rm -f $(OBJ) $(EXE) *.mod core
 
 tar:
 	tar --exclude-vcs -cvf $(EXE).tar $(MF) $(SRC) benchio.pbs \

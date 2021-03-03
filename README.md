@@ -17,12 +17,13 @@ Note that, before running the benchmark, you *must* set the LFS striping on the 
  to file, the halos are omitted.
  
   
- The code uses four IO methods, and for each of them writes to the three directories in turn.  The IO methods are:
+ The code uses five IO methods, and for each of them writes to the three directories in turn.  The IO methods are:
  
- 1. Serial IO using Fortran binary unformatted `write` with `access = stream`
- 2. MPI-IO using native (i.e. binary) format and collective IO
- 3. HDF5 collective IO
- 4. NetCDF collective IO
+ 1. Serial IO to a single file `serial.dat` using Fortran binary unformatted `write` with `access = stream`
+ 2. Multiple serial IO (file-per-process) to P files `multiXXXXXX.dat` using Fortran binary unformatted `write` with `access = stream
+ 3. MPI-IO collective IO to a single file `mpiio.dat` using native (i.e. binary) format
+ 4. HDF5 collective IO to a single file `hdf5.dat`
+ 5. NetCDF collective IO single file `netcdf.dat`
  
  Note that the serial part is designed to give a baseline IO rate. For simplicity, and to ensure we write the same amount of data as for the parallel
  methods, rank 0 writes out its

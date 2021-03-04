@@ -20,8 +20,8 @@ Note that, before running the benchmark, you *must* set the LFS striping on the 
  The code uses six IO methods, and for each of them writes to the three directories in turn.  The IO methods are:
  
  1. Serial IO from one controller process to a single file `serial.dat` using Fortran binary unformatted `write` with `access = stream`
- 2. Multiple serial IO (file-per-process) to *P* files `rankXXXXXX.dat` using Fortran binary unformatted `write` with `access = stream
- 3. Multiple serial IO (file-per-node) to *Nnode* files `nodeXXXXXX.dat` using Fortran binary unformatted `write` with `access = stream
+ 2. Multiple serial IO (file-per-process) to *P* files `rankXXXXXX.dat` using Fortran binary unformatted `write` with `access = stream`
+ 3. Multiple serial IO (file-per-node) to *Nnode* files `nodeXXXXXX.dat` using Fortran binary unformatted `write` with `access = stream`
  4. MPI-IO collective IO to a single file `mpiio.dat` using native (i.e. binary) format
  5. HDF5 collective IO to a single file `hdf5.dat`
  6. NetCDF collective IO single file `netcdf.dat`

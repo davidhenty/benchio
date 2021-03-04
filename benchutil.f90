@@ -1,63 +1,12 @@
-module benchclock
+module benchcomm
 
-  implicit none
-
-  logical,          save, private :: firstcall = .true.
-  double precision, save, private :: ticktime = 0.0
-
-  integer, parameter :: int32kind = selected_int_kind( 9)
-  integer, parameter :: int64kind = selected_int_kind(18)
-
-!
-!  Select high resolution clock
-!
-
-  integer, parameter :: intkind = int64kind
-  integer(kind = intkind) :: count,rate
-
-contains
-
-  double precision function benchtime()
-
-  double precision :: dummy
-
-! Ensure clock is initialised  
-
-  if (firstcall) dummy = benchtick()
-
-  call system_clock(count)
-
-  benchtime  = dble(count)*ticktime
-
-end function benchtime
-
-
-double precision function benchtick()
-
-  if (firstcall) then
-
-     firstcall = .false.
-     call system_clock(count, rate)
-     ticktime = 1.0d0/dble(rate)
-
-  end if
-
-  benchtick = ticktime
-
-end function benchtick
-
-end module benchclock
-
-
-module benchnode
-
-  ! Routines to support file-per-node
+  ! Various MPI-related support routines
 
   use mpi
 
   implicit none
 
-  integer :: nodecomm, nodebosscomm
+  integer :: nodecomm, nodebosscomm, nodenum
 
 contains
 
@@ -65,7 +14,7 @@ contains
 
     integer :: comm
 
-    integer :: size, rank, nodesize, noderank, spansize, spanrank
+    integer :: size, rank, nodesize, noderank, spansize
     integer :: ierr, tag, colour, key, irank, namelen
 
     integer, dimension(MPI_STATUS_SIZE) :: status
@@ -91,7 +40,11 @@ contains
     call MPI_Comm_split(comm, colour, key, nodebosscomm, ierr)
 
     call MPI_Comm_size(nodebosscomm, spansize, ierr)
-    call MPI_Comm_rank(nodebosscomm, spanrank, ierr)
+    call MPI_Comm_rank(nodebosscomm, nodenum,  ierr)
+
+! Make sure all ranks on node know the node number
+
+    call MPI_Bcast(nodenum, 1, MPI_INTEGER, 0, nodecomm, ierr)
 
     call MPI_Get_processor_name(nodename, namelen, ierr)
 
@@ -114,7 +67,7 @@ contains
              call MPI_Recv(nodename, MPI_MAX_PROCESSOR_NAME, MPI_CHARACTER, &
                   irank, MPI_ANY_TAG, nodebosscomm, status, ierr)
 
-             tag = KABMPITAG(status)
+             tag = status(MPI_TAG)
              call MPI_Get_count(status, MPI_CHARACTER, namelen, ierr)
 
           end if
@@ -141,4 +94,79 @@ contains
 
     end if
 
-  end subroutine kabprintnodes
+  end subroutine initbenchnode
+
+  subroutine bossdelete(filename, comm)
+
+    use mpi
+
+    implicit none
+
+    character *(*) :: filename
+    integer :: comm
+    
+    integer, parameter :: iounit = 15
+    integer :: rank, ierr, stat
+
+    call MPI_Comm_rank(comm, rank, ierr)
+
+    if (rank == 0) then
+
+       open(unit=iounit, iostat=stat, file=filename, status='old')
+       if (stat.eq.0) close(unit=iounit, status='delete')
+
+    end if
+
+  end subroutine bossdelete
+
+end module benchcomm
+
+
+module benchclock
+
+  implicit none
+
+  logical,          save, private :: firstcall = .true.
+  double precision, save, private :: ticktime = 0.0
+
+  integer, parameter :: int32kind = selected_int_kind( 9)
+  integer, parameter :: int64kind = selected_int_kind(18)
+
+!
+!  Select high resolution clock
+!
+
+  integer, parameter :: intkind = int64kind
+  integer(kind = intkind) :: count,rate
+
+contains
+
+  double precision function benchtime()
+
+    double precision :: dummy
+
+    ! Ensure clock is initialised  
+
+    if (firstcall) dummy = benchtick()
+
+    call system_clock(count)
+
+    benchtime  = dble(count)*ticktime
+
+  end function benchtime
+
+  double precision function benchtick()
+
+    if (firstcall) then
+
+       firstcall = .false.
+       call system_clock(count, rate)
+       ticktime = 1.0d0/dble(rate)
+
+    end if
+
+    benchtick = ticktime
+
+  end function benchtick
+
+end module benchclock

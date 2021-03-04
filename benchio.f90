@@ -1,6 +1,7 @@
 program benchio
 
   use benchclock
+  use benchcomm
   use mpiio
   use ioserial
   use iohdf5
@@ -8,7 +9,7 @@ program benchio
 
   implicit none
 
-  integer, parameter :: numiolayer = 5
+  integer, parameter :: numiolayer = 6
   integer, parameter :: numstriping = 3
   integer, parameter :: maxlen = 64
 
@@ -17,7 +18,7 @@ program benchio
 
   character*(maxlen) :: filename, suffix
 
-  integer :: iolayer, istriping, iolayermulti
+  integer :: iolayer, istriping, iolayermulti, iolayernode
 
 ! Set local array size - global sizes l1, l2 and l3 are scaled
 ! by number of processes in each dimension
@@ -30,7 +31,7 @@ program benchio
 
   double precision :: iodata(0:n1+1, 0:n2+1, 0:n3+1)
 
-  integer :: rank, size, ierr, comm, cartcomm, dblesize
+  integer :: rank, size, ierr, comm, cartcomm, iocomm, dblesize
   integer, dimension(ndim) :: dims, coords
 
   integer, parameter :: iounit = 12
@@ -47,21 +48,24 @@ program benchio
   stripestring(2) = 'striped'
   stripestring(3) = 'fullstriped'
 
-! Multi is special as it creates many files so need to record this
+! These versions are special as they creates many files so need to record this
 
   iolayermulti = 2
+  iolayernode  = 3
 
   iostring(1) = 'Serial'
   iostring(2) = ' Multi'
-  iostring(3) = 'MPI-IO'
-  iostring(4) = ' HDF5 '
-  iostring(5) = 'NetCDF'
+  iostring(3) = ' Node '
+  iostring(4) = 'MPI-IO'
+  iostring(5) = ' HDF5 '
+  iostring(6) = 'NetCDF'
 
   iolayername(1) = 'serial'
-  iolayername(2) = 'multi'
-  iolayername(3) = 'mpiio'
-  iolayername(4) = 'hdf5'
-  iolayername(5) = 'netcdf'
+  iolayername(2) = 'rank'
+  iolayername(3) = 'node'
+  iolayername(4) = 'mpiio'
+  iolayername(5) = 'hdf5'
+  iolayername(6) = 'netcdf'
 
   call MPI_Init(ierr)
 
@@ -92,12 +96,27 @@ program benchio
 
   gibdata = float(dblesize*n1*n2*n3)*float(p1*p2*p3)/float(gib)
 
+  dims(1) = p1
+  dims(2) = p2
+  dims(3) = p3
+
+  call MPI_Cart_create(comm, ndim, dims, periods, reorder, cartcomm, ierr)
+
   if (rank == 0) then
      write(*,*)
      write(*,*) 'Simple Parallel IO benchmark'
      write(*,*) '----------------------------'
      write(*,*)
      write(*,*) 'Running on ', size, ' process(es)'
+     write(*,*)
+  end if
+
+  ! Set up nodal stuff
+
+  call initbenchnode(cartcomm)
+
+  if (rank == 0) then
+     write(*,*)
      write(*,*) 'Process grid is (', p1, ', ', p2, ', ', p3, ')'
      write(*,*) 'Array size is   (', n1, ', ', n2, ', ', n3, ')'
      write(*,*) 'Global size is  (', l1, ', ', l2, ', ', l3, ')'
@@ -107,13 +126,7 @@ program benchio
      write(*,*) 'Clock resolution is ', benchtick()*1.0e6, ', usecs'
   end if
   
-  dims(1) = p1
-  dims(2) = p2
-  dims(3) = p3
-
-  call MPI_Cart_create(comm, ndim, dims, periods, reorder, cartcomm, ierr)
-
-! Set halos to illegal values
+  ! Set halos to illegal values
 
   iodata(:,:,:) = -1
   
@@ -145,15 +158,33 @@ program benchio
         write(*,*)
      end if
 
+!     if (iolayer == 3 .or. iolayer == 4) then
+!
+!        if (rank == 0) then
+!           write(*,*) "WARNING: Skipping ", iostring(iolayer)
+!        end if
+!
+!        cycle
+!
+!     end if
+
      do istriping = 1, numstriping
 
         filename = trim(stripestring(istriping))//'/'//trim(iolayername(iolayer))
         suffix = ""
 
-        ! Multi IO is special as filename is rank-specific
+        iocomm = cartcomm
+
+        ! Deal with multiple files
 
         if (iolayer == iolayermulti) then
+           iocomm = MPI_COMM_SELF
            write(suffix,fmt="(i6.6)") rank
+        end if
+           
+        if (iolayer == iolayernode) then
+           iocomm = nodecomm
+           write(suffix,fmt="(i6.6)") nodenum
         end if
            
         suffix = trim(suffix)//".dat"
@@ -168,21 +199,17 @@ program benchio
 
         select case (iolayer)
 
-        case(1)
-
-           call serialwrite(filename, iodata, n1, n2, n3, cartcomm)
-
-        case(2)
-           call multiwrite(filename, iodata, n1, n2, n3, cartcomm)
-
-        case(3)
-           call mpiiowrite(filename, iodata, n1, n2, n3, cartcomm)
+        case(1:3)
+           call serialwrite(filename, iodata, n1, n2, n3, iocomm)
 
         case(4)
-           call hdf5write(filename, iodata, n1, n2, n3, cartcomm)
+           call mpiiowrite(filename, iodata, n1, n2, n3, iocomm)
 
         case(5)
-           call netcdfwrite(filename, iodata, n1, n2, n3, cartcomm)
+           call hdf5write(filename, iodata, n1, n2, n3, iocomm)
+
+        case(6)
+           call netcdfwrite(filename, iodata, n1, n2, n3, iocomm)
 
         case default
            write(*,*) 'Illegal value of iolayer = ', iolayer
@@ -200,12 +227,10 @@ program benchio
            write(*,*) 'time = ', time, ', rate = ', iorate, ' GiB/s'
         end if
 
-        if (iolayer == iolayermulti) then
-           call fdelete(filename)
-        else
-           if (rank == 0) call fdelete(filename)
-        end if
+        ! Rank 0 in iocomm deletes
 
+        call bossdelete(filename, iocomm)
+        
      end do
   end do
 

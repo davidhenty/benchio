@@ -2,20 +2,20 @@ module ioserial
 
   contains
 
-subroutine serialwrite(filename, iodata, n1, n2, n3, cartcomm)
+subroutine serialwrite(filename, iodata, n1, n2, n3, comm)
 
   character*(*) :: filename
   
   integer :: n1, n2, n3
   double precision, dimension(0:n1+1,0:n2+1,0:n3+1) :: iodata
 
-  integer :: cartcomm, ierr, rank, size
+  integer :: comm, ierr, rank, size
   integer, parameter :: iounit = 10
 
   integer :: i
 
-  call MPI_Comm_size(cartcomm, size, ierr)
-  call MPI_Comm_rank(cartcomm, rank, ierr)
+  call MPI_Comm_size(comm, size, ierr)
+  call MPI_Comm_rank(comm, rank, ierr)
 
 !  Write same amount of data as the parallel write but do it all from rank 0
 !  This is just to get a baseline figure for serial IO performance - note
@@ -35,14 +35,14 @@ subroutine serialwrite(filename, iodata, n1, n2, n3, cartcomm)
 
 end subroutine serialwrite
 
-subroutine multiwrite(filename, iodata, n1, n2, n3, cartcomm)
+subroutine multiwrite(filename, iodata, n1, n2, n3, comm)
 
   character*(*) :: filename
   
   integer :: n1, n2, n3
   double precision, dimension(0:n1+1,0:n2+1,0:n3+1) :: iodata
 
-  integer :: cartcomm
+  integer :: comm
   integer, parameter :: iounit = 10
 
   open(file=filename, unit=iounit, access='stream')

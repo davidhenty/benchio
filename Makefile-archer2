@@ -1,4 +1,4 @@
-MF=	Makefile-archer
+MF=	Makefile-archer2
 
 # You will need these to load some modules:
 # module load cray-hdf5-parallel

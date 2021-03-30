@@ -1,3 +1,12 @@
+!
+! The "serial" IO routine takes a communicator argument. This enables
+! it to be used for a variety of purposes:
+!
+! MPI_COMM_WORLD: standard "master" IO from a single process
+! MPI_COMM_NODE:  file-per-node
+! MPI_COMM_SELF:  file-per-process
+!
+
 module ioserial
 
   contains
@@ -19,7 +28,7 @@ subroutine serialwrite(filename, iodata, n1, n2, n3, comm)
 
 !  Write same amount of data as the parallel write but do it all from rank 0
 !  This is just to get a baseline figure for serial IO performance - note
-!  that the contents of the file will be differnent from the parallel calls
+!  that the contents of the file will be different from the parallel calls
 
   if (rank == 0) then
 

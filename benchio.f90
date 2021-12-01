@@ -115,7 +115,7 @@ program benchio
         
         if (rank == 0) then
            if (argstring == "usage" .and. numarg == 1) then
-              write(*,*) "usage: benchio [serial] [rank] [node] [mpiio] [hdf5] [netcdf] [unstriped] [striped] [fullstriped]"
+              write(*,*) "usage: benchio [usage] [serial] [rank] [node] [mpiio] [hdf5] [netcdf] [unstriped] [striped] [fullstriped]"
            else
               write(*,*) "Illegal argument: ", argstring
            end if

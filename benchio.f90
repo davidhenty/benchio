@@ -15,10 +15,15 @@ program benchio
 
   character*(maxlen), dimension(numiolayer)  :: iostring, iolayername
   character*(maxlen), dimension(numstriping) :: stripestring
+  character*(maxlen) :: argstring
+
+  logical :: ioflag, stripeflag
+  logical, dimension(numiolayer)  :: doio
+  logical, dimension(numstriping) :: dostripe
 
   character*(maxlen) :: filename, suffix
 
-  integer :: iolayer, istriping, iolayermulti, iolayernode
+  integer :: iolayer, istriping, iolayermulti, iolayernode, numarg, iarg
 
 ! Set local array size - global sizes l1, l2 and l3 are scaled
 ! by number of processes in each dimension
@@ -44,28 +49,28 @@ program benchio
 
   double precision :: t0, t1, time, iorate, gibdata
 
-  stripestring(1) = 'unstriped'
-  stripestring(2) = 'striped'
-  stripestring(3) = 'fullstriped'
+  stripestring(1) = "unstriped"
+  stripestring(2) = "striped"
+  stripestring(3) = "fullstriped"
 
 ! These versions are special as they creates many files so need to record this
 
   iolayermulti = 2
   iolayernode  = 3
+  
+  iostring(1) = "Serial"
+  iostring(2) = " Multi"
+  iostring(3) = " Node "
+  iostring(4) = "MPI-IO"
+  iostring(5) = " HDF5 "
+  iostring(6) = "NetCDF"
 
-  iostring(1) = 'Serial'
-  iostring(2) = ' Multi'
-  iostring(3) = ' Node '
-  iostring(4) = 'MPI-IO'
-  iostring(5) = ' HDF5 '
-  iostring(6) = 'NetCDF'
-
-  iolayername(1) = 'serial'
-  iolayername(2) = 'rank'
-  iolayername(3) = 'node'
-  iolayername(4) = 'mpiio'
-  iolayername(5) = 'hdf5'
-  iolayername(6) = 'netcdf'
+  iolayername(1) = "serial"
+  iolayername(2) = "rank"
+  iolayername(3) = "node"
+  iolayername(4) = "mpiio"
+  iolayername(5) = "hdf5"
+  iolayername(6) = "netcdf"
 
   call MPI_Init(ierr)
 
@@ -74,9 +79,67 @@ program benchio
   call MPI_Comm_size(comm, size, ierr)
   call MPI_Comm_rank(comm, rank, ierr)
 
-  dims(:) = 0
+  ! Parse the arguments
 
-! Set 3D processor grid
+  doio(:) = .false.
+  dostripe(:) = .false.  
+  
+  numarg = command_argument_count()
+  
+  do iarg = 1, numarg
+
+     ioflag = .false.
+     stripeflag = .false.
+
+     call get_command_argument(iarg, argstring)
+     
+     do iolayer = 1, numiolayer
+
+        if (iolayername(iolayer) == argstring) then
+           ioflag = .true.
+           doio(iolayer) = .true.
+        end if
+
+     end do
+
+     do istriping = 1, numstriping
+
+        if (stripestring(istriping) == argstring) then
+           stripeflag = .true.
+           dostripe(istriping) = .true.
+        end if
+
+     end do
+
+     if (.not.ioflag .and. .not.stripeflag) then
+        
+        if (rank == 0) then
+           if (argstring == "usage" .and. numarg == 1) then
+              write(*,*) "usage: benchio [serial] [rank] [node] [mpiio] [hdf5] [netcdf] [unstriped] [striped] [fullstriped]"
+           else
+              write(*,*) "Illegal argument: ", argstring
+           end if
+
+        end if
+
+        call MPI_Finalize(ierr)
+        stop
+           
+     end if
+
+  end do
+
+  ! Check defaults
+
+  if (count(doio(:)) == 0) then
+     doio(:) = .true.
+  end if
+
+  if (count(dostripe(:)) == 0) then
+     dostripe(:) = .true.
+  end if
+
+  ! Set 3D processor grid
 
   call MPI_Dims_create(size, ndim, dims, ierr)
 
@@ -104,10 +167,10 @@ program benchio
 
   if (rank == 0) then
      write(*,*)
-     write(*,*) 'Simple Parallel IO benchmark'
-     write(*,*) '----------------------------'
+     write(*,*) "Simple Parallel IO benchmark"
+     write(*,*) "----------------------------"
      write(*,*)
-     write(*,*) 'Running on ', size, ' process(es)'
+     write(*,*) "Running on ", size, " process(es)"
      write(*,*)
   end if
 
@@ -116,16 +179,35 @@ program benchio
   call initbenchnode(cartcomm)
 
   if (rank == 0) then
+
      write(*,*)
-     write(*,*) 'Process grid is (', p1, ', ', p2, ', ', p3, ')'
-     write(*,*) 'Array size is   (', n1, ', ', n2, ', ', n3, ')'
-     write(*,*) 'Global size is  (', l1, ', ', l2, ', ', l3, ')'
+     write(*,*) "Process grid is (", p1, ", ", p2, ", ", p3, ")"
+     write(*,*) "Array size is   (", n1, ", ", n2, ", ", n3, ")"
+     write(*,*) "Global size is  (", l1, ", ", l2, ", ", l3, ")"
      write(*,*)
-     write(*,*) 'Total amount of data = ', gibdata, ' GiB'
+     write(*,*) "Total amount of data = ", gibdata, " GiB"
      write(*,*)
-     write(*,*) 'Clock resolution is ', benchtick()*1.0e6, ', usecs'
+     write(*,*) "Clock resolution is ", benchtick()*1.0e6, ", usecs"
+     write(*,*)
+     write(*,*) "Using the following IO methods"
+     write(*,*) "------------------------------"
+
+     do iolayer = 1, numiolayer
+        if (doio(iolayer)) write(*,*) iolayername(iolayer)
+     end do
+
+     write(*,*)
+     write(*,*) "Using the following stripings"
+     write(*,*) "-----------------------------"
+     
+     do istriping = 1, numstriping
+        if (dostripe(istriping)) write(*,*) stripestring(istriping)
+     end do
+
+     write(*,*)
+
   end if
-  
+
   ! Set halos to illegal values
 
   iodata(:,:,:) = -1
@@ -150,11 +232,13 @@ program benchio
 
   do iolayer = 1, numiolayer
 
+     if (.not. doio(iolayer)) cycle
+
      if (rank == 0) then
         write(*,*)
-        write(*,*) '------'
+        write(*,*) "------"
         write(*,*) iostring(iolayer)
-        write(*,*) '------'
+        write(*,*) "------"
         write(*,*)
      end if
 
@@ -170,7 +254,9 @@ program benchio
 
      do istriping = 1, numstriping
 
-        filename = trim(stripestring(istriping))//'/'//trim(iolayername(iolayer))
+        if (.not. dostripe(istriping)) cycle
+
+        filename = trim(stripestring(istriping))//"/"//trim(iolayername(iolayer))
         suffix = ""
 
         iocomm = cartcomm
@@ -191,7 +277,7 @@ program benchio
         filename = trim(filename)//suffix
         
         if (rank == 0) then
-           write(*,*) 'Writing to ', filename
+           write(*,*) "Writing to ", filename
         end if
 
         call MPI_Barrier(comm, ierr)
@@ -212,7 +298,7 @@ program benchio
            call netcdfwrite(filename, iodata, n1, n2, n3, iocomm)
 
         case default
-           write(*,*) 'Illegal value of iolayer = ', iolayer
+           write(*,*) "Illegal value of iolayer = ", iolayer
            stop
 
         end select
@@ -224,7 +310,7 @@ program benchio
         iorate = gibdata/time
 
         if (rank == 0) then
-           write(*,*) 'time = ', time, ', rate = ', iorate, ' GiB/s'
+           write(*,*) "time = ", time, ", rate = ", iorate, " GiB/s"
         end if
 
         ! Rank 0 in iocomm deletes
@@ -236,9 +322,9 @@ program benchio
 
   if (rank == 0) then
      write(*,*)
-     write(*,*) '--------'
-     write(*,*) 'Finished'
-     write(*,*) '--------'
+     write(*,*) "--------"
+     write(*,*) "Finished"
+     write(*,*) "--------"
      write(*,*)
   end if
 

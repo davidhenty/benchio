@@ -17,7 +17,7 @@ program benchio
   character*(maxlen), dimension(numstriping) :: stripestring
   character*(maxlen) :: argstring
 
-  logical :: ioflag, stripeflag
+  logical :: ioflag, stripeflag, globalflag
   logical, dimension(numiolayer)  :: doio
   logical, dimension(numstriping) :: dostripe
 
@@ -28,13 +28,13 @@ program benchio
 ! Set local array size - global sizes l1, l2 and l3 are scaled
 ! by number of processes in each dimension
 
-  integer, parameter :: n1 = 128
-  integer, parameter :: n2 = 128
-  integer, parameter :: n3 = 128
+  integer, parameter :: n1def = 128
+  integer, parameter :: n2def = 128
+  integer, parameter :: n3def = 128
 
-  integer :: i1, i2, i3, j1, j2, j3, l1, l2, l3, p1, p2, p3
+  integer :: i1, i2, i3, j1, j2, j3, n1, n2, n3, l1, l2, l3, p1, p2, p3
 
-  double precision :: iodata(0:n1+1, 0:n2+1, 0:n3+1)
+  double precision, allocatable, dimension(:,:,:) :: iodata
 
   integer :: rank, size, ierr, comm, cartcomm, iocomm, dblesize
   integer, dimension(ndim) :: dims, coords
@@ -85,8 +85,32 @@ program benchio
   dostripe(:) = .false.  
   
   numarg = command_argument_count()
-  
-  do iarg = 1, numarg
+
+  if (numarg < 4) then
+
+     if (rank == 0) then
+        write(*,*) "usage: benchio (n1, n2, n3) (local|global) [serial] [rank] [node]"
+        write(*,*) "       [mpiio] [hdf5] [netcdf] [unstriped] [striped] [fullstriped]"
+     end if
+
+     call MPI_Finalize(ierr)
+     stop
+           
+  end if
+
+  call get_command_argument(1, argstring)
+  read(argstring,*) n1
+  call get_command_argument(2, argstring)
+  read(argstring,*) n2
+  call get_command_argument(3, argstring)
+  read(argstring,*) n3
+
+  globalflag = .true.
+
+  call get_command_argument(4, argstring)
+  if (argstring == "local") globalflag = .false.
+
+  do iarg = 5, numarg
 
      ioflag = .false.
      stripeflag = .false.
@@ -113,14 +137,7 @@ program benchio
 
      if (.not.ioflag .and. .not.stripeflag) then
         
-        if (rank == 0) then
-           if (argstring == "usage" .and. numarg == 1) then
-              write(*,*) "usage: benchio [usage] [serial] [rank] [node] [mpiio] [hdf5] [netcdf] [unstriped] [striped] [fullstriped]"
-           else
-              write(*,*) "Illegal argument: ", argstring
-           end if
-
-        end if
+        write(*,*) "Illegal argument: ", argstring
 
         call MPI_Finalize(ierr)
         stop
@@ -141,6 +158,7 @@ program benchio
 
   ! Set 3D processor grid
 
+  dims(:) = 0
   call MPI_Dims_create(size, ndim, dims, ierr)
 
 ! Reverse dimensions as MPI assumes C ordering (this is not essential)
@@ -149,7 +167,15 @@ program benchio
   p2 = dims(2)
   p3 = dims(1)
 
-! Compute global sizes
+  ! Compute local sizes if required
+
+  if (globalflag) then
+     n1 = n1/p1
+     n2 = n2/p2
+     n3 = n3/p3
+  end if
+
+  ! Compute global sizes
 
   l1 = p1*n1
   l2 = p2*n2
@@ -157,7 +183,8 @@ program benchio
 
   call MPI_Type_size(MPI_DOUBLE_PRECISION, dblesize, ierr)
 
-  gibdata = float(dblesize*n1*n2*n3)*float(p1*p2*p3)/float(gib)
+  gibdata = float(dblesize)*float(n1)*float(n2)*float(n3)*float(p1*p2*p3)
+  gibdata = gibdata/float(gib)
 
   dims(1) = p1
   dims(2) = p2
@@ -207,6 +234,10 @@ program benchio
      write(*,*)
 
   end if
+
+  ! Allocate data
+
+  allocate(iodata(0:n1+1, 0:n2+1, 0:n3+1))
 
   ! Set halos to illegal values
 

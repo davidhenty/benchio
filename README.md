@@ -9,7 +9,7 @@ Note that, before running the benchmark, you *must* set the Lustre striping on t
 
 The program has a very basic set of command-line options. The first
 three arguments must be the dimensions of the dataset; the fourth
-argument specified of these are local sizes (i.e. weak scaling), or
+argument specifies if these are local sizes (i.e. weak scaling), or
 global sizes (strong scaling).
 
 For example, to run using a 256 x 256 x 256 data array on every

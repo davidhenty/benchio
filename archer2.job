@@ -2,14 +2,12 @@
 
 # Slurm job options (name, compute nodes, job time)
 #SBATCH --job-name=benchio
-#SBATCH --time=00:20:00
+#SBATCH --time=00:05:00
 #SBATCH --output=%x-%j.out
-#SBATCH --nodes=16
-#SBATCH --tasks-per-node=128
+#SBATCH --nodes=1
+#SBATCH --tasks-per-node=1
 #SBATCH --cpus-per-task=1
-# Replace [budget code] below with your budget code (e.g. t01)
-#SBATCH --account=z19
-#SBATCH --qos=standard
+#SBATCH --qos=short
 #SBATCH --partition=standard
 
 cat $0
@@ -29,6 +27,7 @@ ulimit -s unlimited
 
 # Launch the parallel job
 
+# Magic setting to improve IO performance with default MPI
 export FI_OFI_RXM_SAR_LIMIT=64K
 
-srun --unbuffered --cpu-bind=cores ./benchio
+srun --unbuffered --distribution=block:block ./benchio

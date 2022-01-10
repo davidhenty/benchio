@@ -5,15 +5,11 @@
 #SBATCH --time=00:05:00
 #SBATCH --output=%x-%j.out
 #SBATCH --nodes=1
-#SBATCH --tasks-per-node=1
+#SBATCH --tasks-per-node=128
 #SBATCH --cpus-per-task=1
-#SBATCH --qos=short
+#SBATCH --qos=standard
 #SBATCH --partition=standard
-
-cat $0
-
-module load epcc-job-env
-
+#SBATCH --reservation=ta048_1738087
 module load cray-hdf5-parallel
 module load cray-netcdf-hdf5parallel
 
@@ -30,4 +26,5 @@ ulimit -s unlimited
 # Magic setting to improve IO performance with default MPI
 export FI_OFI_RXM_SAR_LIMIT=64K
 
-srun --unbuffered --distribution=block:block ./benchio
+srun --unbuffered --distribution=block:block \
+     ./benchio 512 512 512 local serial unstriped

@@ -63,5 +63,7 @@ subsets by setting additional optional command-line options.
 The full
 set of options is:
 ````
-usage: benchio (n1, n2, n3) (local|global) [serial] [rank] [node] [mpiio] [hdf5] [netcdf] [unstriped] [striped] [fullstriped]
+benchio (n1, n2, n3) (local|global)
+        [serial] [rank] [node] [mpiio] [hdf5] [netcdf]
+	[unstriped] [striped] [fullstriped]
 ````

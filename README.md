@@ -1,4 +1,4 @@
-# benchio
+ # benchio
 Simple Fortran parallel IO benchmark for teaching and benchmarking purposes
 
 Note that, before running the benchmark, you *must* set the LFS striping on the three directories `unstriped`, `striped` and `fullstriped`.

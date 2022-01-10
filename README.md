@@ -9,28 +9,36 @@ Note that, before running the benchmark, you *must* set the LFS striping on the 
 
 The program has a very basic set of command-line options. The first
 three arguments must be the dimensions of the dataset; the fourth
-argument specified of these are global sizes (i.e. strong scaling), or
-local sizes (weak scaling).
+argument specified of these are local sizes (i.e. weak scaling), or
+global sizes (strong scaling).
 
-For example,
-
+For example, to run using a 256 x 256 x 256 data array on every
+process (i.e. weak scaling):
 ````
-benchio dd
+benchio 256 256 256 local
 ````
+In this case, the total file size will scale with the number of
+processes. If run on 8 processes then the total file size would be 1
+GiB.
 
-The size of the dataset (n1, n2, n3) be specified at runtime as The
-benchmark uses weak scaling, i.e. the local 3D array dimensions n1, n2
-and n3 are defined in the code (default values 128) and the array is
-replicated across the parallel processes. If the local array size is
-n1 x n2 x n3, then the double precision arrays are defined with halos
-as: `double precision :: iodata(0:n1+1, 0:n2+1, 0:n3+1)`.
+To run using a 256 x 256 x 256 global array (i.e. strong scaling):
+````
+benchio 256 256 256 global
+````
+In this case, the file size will be 128 MiB regardless of the number
+of processes.
 
-A 3D cartesian topology p1 x p2 x p3 is created with dimensions suggested
- by `MPI_Dims_create()` to create a global 3D array of size l1 x l2 x l3 where l1 = p1 x n1 etc.
+If the local array size is n1 x n2 x n3, then the double precision
+arrays are defined with halos as: `double precision :: iodata(0:n1+1,
+0:n2+1, 0:n3+1)`.
+
+A 3D cartesian topology p1 x p2 x p3 is created with dimensions
+suggested by `MPI_Dims_create()` to create a global 3D array of size
+l1 x l2 x l3 where l1 = p1 x n1 etc.
  
- The entries of the distributed IO array are set to globally unique values 1, 2, ... l1xl2xl3 using the normal Fortran ordering; the
- halo values are set to -1. When writing
- to file, the halos are omitted.
+ The entries of the distributed IO array are set to globally unique
+ values 1, 2, ... l1xl2xl3 using the normal Fortran ordering; the halo
+ values are set to -1. When writing to file, the halos are omitted.
  
   
  The code uses six IO methods, and for each of them writes to the three directories in turn.  The IO methods are:

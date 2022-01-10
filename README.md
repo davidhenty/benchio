@@ -64,6 +64,6 @@ The full
 set of options is:
 ````
 benchio (n1, n2, n3) (local|global)
-        [serial] [rank] [node] [mpiio] [hdf5] [netcdf]
+        [serial] [proc] [node] [mpiio] [hdf5] [netcdf]
 	[unstriped] [striped] [fullstriped]
 ````

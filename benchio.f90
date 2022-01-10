@@ -59,7 +59,7 @@ program benchio
   iolayernode  = 3
   
   iostring(1) = "Serial"
-  iostring(2) = " Multi"
+  iostring(2) = " Proc"
   iostring(3) = " Node "
   iostring(4) = "MPI-IO"
   iostring(5) = " HDF5 "

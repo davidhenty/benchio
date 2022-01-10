@@ -41,7 +41,8 @@ l1 x l2 x l3 where l1 = p1 x n1 etc.
  values are set to -1. When writing to file, the halos are omitted.
  
   
- The code uses six IO methods, and for each of them writes to the three directories in turn.  The IO methods are:
+The code can use six IO methods, and for each of them can use up to
+three directories with different stripings.  The IO methods are:
  
  1. Serial IO from one controller process to a single file `serial.dat` using Fortran binary unformatted `write` with `access = stream`
  2. Multiple serial IO (file-per-process) to *P* files `rankXXXXXX.dat` using Fortran binary unformatted `write` with `access = stream`
@@ -54,3 +55,13 @@ l1 x l2 x l3 where l1 = p1 x n1 etc.
  methods, rank 0 writes out its
  own local array `size` times in succession. Unlike the parallel IO formats, the contents of the file will therefore *not* be a linearly increasing set of
  values 1, 2, 3, ..., l1xl2xl3.
+
+If only the first four mandatory arguments are specified then all six
+IO methods and all three stripings are used. However, you can pick
+subsets by setting additional optional command-line options.
+
+The full
+set of options is:
+````
+usage: benchio (n1, n2, n3) (local|global) [serial] [rank] [node] [mpiio] [hdf5] [netcdf] [unstriped] [striped] [fullstriped]
+````

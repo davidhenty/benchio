@@ -66,7 +66,7 @@ program benchio
   iostring(6) = "NetCDF"
 
   iolayername(1) = "serial"
-  iolayername(2) = "rank"
+  iolayername(2) = "proc"
   iolayername(3) = "node"
   iolayername(4) = "mpiio"
   iolayername(5) = "hdf5"
@@ -89,7 +89,7 @@ program benchio
   if (numarg < 4) then
 
      if (rank == 0) then
-        write(*,*) "usage: benchio (n1, n2, n3) (local|global) [serial] [rank] [node]"
+        write(*,*) "usage: benchio (n1, n2, n3) (local|global) [serial] [proc] [node]"
         write(*,*) "       [mpiio] [hdf5] [netcdf] [unstriped] [striped] [fullstriped]"
      end if
 

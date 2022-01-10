@@ -7,13 +7,25 @@ Note that, before running the benchmark, you *must* set the LFS striping on the 
  * Set `fullstriped` to use the maximum number of stripes: `lfs setstripe -c -1 fullstriped`
  * Set `striped` to use an intermediate number of stripes, e.g. for 4 stripes: `lfs setstripe -c 4 striped`
 
-The program has a very basic set of command-line options. The first three arguments must be the dimensions of the dataset; the fourth argument 
+The program has a very basic set of command-line options. The first
+three arguments must be the dimensions of the dataset; the fourth
+argument specified of these are global sizes (i.e. strong scaling), or
+local sizes (weak scaling).
 
+For example,
 
-The size of the data arrays must be specified at runtime as
-The benchmark uses weak scaling, i.e. the local 3D array dimensions n1, n2 and n3 are defined
- in the code (default values 128) and the array is replicated across the parallel processes. If the local array size is n1 x n2 x n3, then the double precision
- arrays are defined with halos as: `double precision :: iodata(0:n1+1, 0:n2+1, 0:n3+1)`. A 3D cartesian topology p1 x p2 x p3 is created with dimensions suggested
+````
+benchio dd
+````
+
+The size of the dataset (n1, n2, n3) be specified at runtime as The
+benchmark uses weak scaling, i.e. the local 3D array dimensions n1, n2
+and n3 are defined in the code (default values 128) and the array is
+replicated across the parallel processes. If the local array size is
+n1 x n2 x n3, then the double precision arrays are defined with halos
+as: `double precision :: iodata(0:n1+1, 0:n2+1, 0:n3+1)`.
+
+A 3D cartesian topology p1 x p2 x p3 is created with dimensions suggested
  by `MPI_Dims_create()` to create a global 3D array of size l1 x l2 x l3 where l1 = p1 x n1 etc.
  
  The entries of the distributed IO array are set to globally unique values 1, 2, ... l1xl2xl3 using the normal Fortran ordering; the

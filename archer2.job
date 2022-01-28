@@ -7,9 +7,8 @@
 #SBATCH --nodes=1
 #SBATCH --tasks-per-node=1
 #SBATCH --cpus-per-task=1
-#SBATCH --qos=reservation
+#SBATCH --qos=short
 #SBATCH --partition=standard
-#SBATCH --reservation=ta048_1738087
 
 module load cray-hdf5-parallel
 module load cray-netcdf-hdf5parallel

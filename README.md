@@ -1,5 +1,11 @@
  # benchio
-Simple Fortran parallel IO benchmark for teaching and benchmarking purposes
+Simple Fortran parallel IO benchmark for teaching and benchmarking purposes.
+
+Benchio builds on a one-dimensional parallel IO benchmark previously
+developed for the EU-funded EUFORIA project. See "High Performance
+I/O", Adrian Jackson, Fiona Reid, Joachim Hein, Alejandro Soba and
+Xavier Saez;
+[https://ieeexplore.ieee.org/document/5739034/]([https://ieeexplore.ieee.org/document/5739034/).
 
 Note that, before running the benchmark, you *must* set the Lustre striping on the three directories `unstriped`, `striped` and `fullstriped`.
 

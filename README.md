@@ -47,7 +47,7 @@ l1 x l2 x l3 where l1 = p1 x n1 etc.
  values are set to -1. When writing to file, the halos are omitted.
  
   
-The code can use six IO methods, and for each of them can use up to
+The code can use seven IO methods, and for each of them can use up to
 three directories with different stripings.  The IO methods are:
  
  1. Serial IO from one controller process to a single file `serial.dat` using Fortran binary unformatted `write` with `access = stream`
@@ -56,6 +56,8 @@ three directories with different stripings.  The IO methods are:
  4. MPI-IO collective IO to a single file `mpiio.dat` using native (i.e. binary) format
  5. HDF5 collective IO to a single file `hdf5.dat`
  6. NetCDF collective IO single file `netcdf.dat`
+ 7. ADIOS2 collective IO to a BP5 directory `adios.dat`
+    - ADIOS2 aggregator settings can be changed in the `adios2.xml` file
  
  Note that the serial part is designed to give a baseline IO rate. For simplicity, and to ensure we write the same amount of data as for the parallel
  methods, rank 0 writes out its
@@ -70,6 +72,6 @@ The full
 set of options is:
 ````
 benchio (n1, n2, n3) (local|global)
-        [serial] [proc] [node] [mpiio] [hdf5] [netcdf]
+        [serial] [proc] [node] [mpiio] [hdf5] [netcdf] [adios]
 	[unstriped] [striped] [fullstriped]
 ````

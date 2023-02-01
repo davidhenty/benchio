@@ -6,10 +6,11 @@ program benchio
   use ioserial
   use iohdf5
   use ionetcdf
+  use adios
 
   implicit none
 
-  integer, parameter :: numiolayer = 6
+  integer, parameter :: numiolayer = 7
   integer, parameter :: numstriping = 3
   integer, parameter :: maxlen = 64
 
@@ -64,6 +65,7 @@ program benchio
   iostring(4) = "MPI-IO"
   iostring(5) = " HDF5 "
   iostring(6) = "NetCDF"
+  iostring(7) = "Adios2"
 
   iolayername(1) = "serial"
   iolayername(2) = "proc"
@@ -71,6 +73,7 @@ program benchio
   iolayername(4) = "mpiio"
   iolayername(5) = "hdf5"
   iolayername(6) = "netcdf"
+  iolayername(7) = "adios"
 
   call MPI_Init(ierr)
 
@@ -90,7 +93,7 @@ program benchio
 
      if (rank == 0) then
         write(*,*) "usage: benchio (n1, n2, n3) (local|global) [serial] [proc] [node]"
-        write(*,*) "       [mpiio] [hdf5] [netcdf] [unstriped] [striped] [fullstriped]"
+        write(*,*) "       [mpiio] [hdf5] [netcdf] [adios] [unstriped] [striped] [fullstriped]"
      end if
 
      call MPI_Finalize(ierr)
@@ -328,6 +331,9 @@ program benchio
         case(6)
            call netcdfwrite(filename, iodata, n1, n2, n3, iocomm)
 
+        case(7)
+           call adioswrite(filename, iodata, n1, n2, n3, iocomm)
+
         case default
            write(*,*) "Illegal value of iolayer = ", iolayer
            stop
@@ -345,8 +351,19 @@ program benchio
         end if
 
         ! Rank 0 in iocomm deletes
+        if (iolayer == 7) then
+          ! ADIOS makes a directory so the file deletion function will not work
+          ! use the shell instead
 
-        call bossdelete(filename, iocomm)
+          call MPI_Barrier(comm, ierr)
+          if (rank == 0) then
+            call execute_command_line("rm -r "//filename)
+          end if 
+          call MPI_Barrier(comm, ierr)
+        
+        else
+           call bossdelete(filename, iocomm)
+        endif
         
      end do
   end do

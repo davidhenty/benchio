@@ -1,12 +1,18 @@
 MF=	Makefile-archer2
 
-# You will need these to load some modules:
+# You will need to load some modules:
+# 
+# module use /work/z19/shared/sfarr/modulefiles
+# module load adios/2.8.3
+#
 # module load cray-hdf5-parallel
 # module load cray-netcdf-hdf5parallel
+#
+
 
 FC=	ftn
-FFLAGS=	-O3
-LFLAGS=
+FFLAGS=-O3 $(shell adios2-config --fortran-flags)
+LFLAGS=$(shell adios2-config --fortran-libs)
 
 EXE=	benchio
 
@@ -16,6 +22,7 @@ SRC= \
 	serial.f90 \
 	netcdf.f90 \
 	hdf5.f90 \
+	adios.f90 \
 	benchutil.f90
 
 
@@ -38,7 +45,7 @@ $(EXE):	$(OBJ)
 
 $(OBJ):	$(MF)
 
-benchio.o: serial.o mpiio.o benchutil.o netcdf.o hdf5.o
+benchio.o: serial.o mpiio.o benchutil.o netcdf.o hdf5.o adios.o
 
 clean:
 	rm -f $(OBJ) $(EXE) *.mod core

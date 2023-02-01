@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<adios-config>
+  <io name="Output">
+
+    <engine type="BP5">
+
+      <parameter key="NumAggregators" value="12"/>
+      <parameter key="Verbose" value="0"/>
+
+    </engine>
+  
+   </io>
+
+</adios-config>

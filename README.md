@@ -7,6 +7,9 @@ I/O", Adrian Jackson, Fiona Reid, Joachim Hein, Alejandro Soba and
 Xavier Saez;
 [https://ieeexplore.ieee.org/document/5739034/](https://ieeexplore.ieee.org/document/5739034/).
 
+ADIOS2 functionality was added by Stephen Farr under the EU-funded
+EuroCC project.
+
 Note that, before running the benchmark, you *must* set the Lustre striping on the three directories `unstriped`, `striped` and `fullstriped`.
 
  * Set `unstriped` to have a single stripe: `lfs setstripe -c 1 unstriped`

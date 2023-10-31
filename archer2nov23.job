@@ -9,8 +9,10 @@
 #SBATCH --cpus-per-task=1
 #SBATCH --partition=standard
 #SBATCH --qos=reservation
-#SBATCH --reservation=ta079_797734
+#SBATCH --reservation=ta128_1043874
 
+module use /work/z19/shared/sfarr/modulefiles
+module load adios/2.8.3
 module load cray-hdf5-parallel
 module load cray-netcdf-hdf5parallel
 
@@ -19,6 +21,7 @@ module load cray-netcdf-hdf5parallel
 #   using threading.
 
 export OMP_NUM_THREADS=1
+export SRUN_CPUS_PER_TASK=${SLURM_CPUS_PER_TASK}
 
 ulimit -s unlimited
 

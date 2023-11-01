@@ -4,8 +4,11 @@
 
     <engine type="BP5">
 
-      <parameter key="NumAggregators" value="12"/>
       <parameter key="Verbose" value="0"/>
+
+      <!-- Can optionally set the number of aggregators:
+      <parameter key="NumAggregators" value="4"/>
+      -->
 
     </engine>
   

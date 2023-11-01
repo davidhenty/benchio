@@ -68,9 +68,9 @@ If only the first four mandatory arguments are specified then all six
 IO methods and all three stripings are used. However, you can pick
 subsets by setting additional optional command-line options.
 
-1. `serial`: Serial IO from one controller process to a single file `serial.dat` using Fortran binary unformatted `write` with `access = stream`
- 2. `proc`: File-per-process with multiple serial IO to *P* files `rankXXXXXX.dat` using Fortran binary unformatted `write` with `access = stream`
- 3. `node`: File-per-node) with multiple serial IO to *Nnode* files `nodeXXXXXX.dat` using Fortran binary unformatted `write` with `access = stream`
+1. `serial`: Serial IO from one controller process to a single file `serial.dat` using Fortran binary unformatted write with `access = stream`
+ 2. `proc`: File-per-process with multiple serial IO to *P* files `rankXXXXXX.dat` using Fortran binary unformatted write with `access = stream`
+ 3. `node`: File-per-node) with multiple serial IO to *Nnode* files `nodeXXXXXX.dat` using Fortran binary unformatted write with `access = stream`
  4. `mpiio`: MPI-IO collective IO to a single file `mpiio.dat` using native (i.e. binary) format
  5. `hdf5`: HDF5 collective IO to a single file `hdf5.dat`
  6. `netcdf`: NetCDF collective IO to a single file `netcdf.dat`

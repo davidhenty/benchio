@@ -52,7 +52,10 @@ l1 x l2 x l3 where l1 = p1 x n1 etc.
   
 The code can use seven IO methods, and for each of them can use up to
 three directories with different stripings.
- 
+
+All files are deleted immediately after being written to avoid excess
+disk usage.
+
 The full
 set of options is:
 ````

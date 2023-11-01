@@ -51,26 +51,8 @@ l1 x l2 x l3 where l1 = p1 x n1 etc.
  
   
 The code can use seven IO methods, and for each of them can use up to
-three directories with different stripings.  The IO methods are:
+three directories with different stripings.
  
- 1. Serial IO from one controller process to a single file `serial.dat` using Fortran binary unformatted `write` with `access = stream`
- 2. Multiple serial IO (file-per-process) to *P* files `rankXXXXXX.dat` using Fortran binary unformatted `write` with `access = stream`
- 3. Multiple serial IO (file-per-node) to *Nnode* files `nodeXXXXXX.dat` using Fortran binary unformatted `write` with `access = stream`
- 4. MPI-IO collective IO to a single file `mpiio.dat` using native (i.e. binary) format
- 5. HDF5 collective IO to a single file `hdf5.dat`
- 6. NetCDF collective IO single file `netcdf.dat`
- 7. ADIOS2 collective IO to a BP5 directory `adios.dat`
-    - ADIOS2 aggregator settings can be changed in the `adios2.xml` file
- 
- Note that the serial part is designed to give a baseline IO rate. For simplicity, and to ensure we write the same amount of data as for the parallel
- methods, rank 0 writes out its
- own local array `size` times in succession. Unlike the parallel IO formats, the contents of the file will therefore *not* be a linearly increasing set of
- values 1, 2, 3, ..., l1xl2xl3.
-
-If only the first four mandatory arguments are specified then all six
-IO methods and all three stripings are used. However, you can pick
-subsets by setting additional optional command-line options.
-
 The full
 set of options is:
 ````
@@ -78,3 +60,23 @@ benchio (n1, n2, n3) (local|global)
         [serial] [proc] [node] [mpiio] [hdf5] [netcdf] [adios]
 	[unstriped] [striped] [fullstriped]
 ````
+
+If only the first four mandatory arguments are specified then all six
+IO methods and all three stripings are used. However, you can pick
+subsets by setting additional optional command-line options.
+
+1. `serial`: Serial IO from one controller process to a single file `serial.dat` using Fortran binary unformatted `write` with `access = stream`
+ 2. `proc`: File-per-process with multiple serial IO to *P* files `rankXXXXXX.dat` using Fortran binary unformatted `write` with `access = stream`
+ 3. `node`: File-per-node) with multiple serial IO *Nnode* files `nodeXXXXXX.dat` using Fortran binary unformatted `write` with `access = stream`
+ 4. `mpiio`: MPI-IO collective IO to a single file `mpiio.dat` using native (i.e. binary) format
+ 5. `hdf5`: HDF5 collective IO to a single file `hdf5.dat`
+ 6. `netcdf`: NetCDF collective IO to a single file `netcdf.dat`
+ 7. `adios`: ADIOS2 collective IO to a BP5 directory `adios.dat`
+    - ADIOS2 aggregator settings can be changed in the `adios2.xml` file
+ 
+ Note that the serial part is designed to give a baseline IO rate. For simplicity, and to ensure we write the same amount of data as for the parallel
+ methods, rank 0 writes out its
+ own local array `size` times in succession. Unlike the parallel IO formats, the contents of the file will therefore *not* be a linearly increasing set of
+ values 1, 2, 3, ..., l1xl2xl3.
+
+

@@ -3,11 +3,11 @@ module mpiio
   use mpi
   implicit none
 
-  integer, parameter :: ndim = 3
-
 contains
 
 subroutine mpiiowrite(filename, iodata, n1, n2, n3, cartcomm)
+
+  integer, parameter :: ndim = 3
 
   character*(*) :: filename
   

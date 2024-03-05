@@ -87,20 +87,21 @@ program benchio
   call MPI_Comm_size(comm, worldsize, ierr)
   call MPI_Comm_rank(comm, worldrank, ierr)
 
+  ! These 3 options are block, cyclic1 and cyclic64
+
+  
   !  call MPI_Comm_split(MPI_COMM_WORLD, (2*worldrank)/worldsize, worldrank, comm, ierr)
-
   !  call MPI_Comm_split(MPI_COMM_WORLD, mod(worldrank,2), worldrank, comm, ierr)
-  write(*,*) "worldrank, mod = ", worldrank,  (2*mod(worldrank,128))/128
-
   call MPI_Comm_split(MPI_COMM_WORLD, (2*mod(worldrank,128))/128, worldrank, comm, ierr)
   
 
   call MPI_Comm_size(comm, size, ierr)
   call MPI_Comm_rank(comm, rank, ierr)
 
+  ! These 3 options are block, cyclic1 and cyclic64
+
   !  if (worldrank < size) then
   !  if (mod(worldrank,2) == 0) then
-
   if ((2*mod(worldrank,128))/128 == 0) then
 
   ! Parse the arguments

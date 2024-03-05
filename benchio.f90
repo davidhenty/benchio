@@ -7,10 +7,13 @@ program benchio
   use iohdf5
   use ionetcdf
   use adios
+  use iolinear
 
   implicit none
 
-  integer, parameter :: numiolayer = 7
+  integer, parameter :: ndim = 3
+
+  integer, parameter :: numiolayer = 8  
   integer, parameter :: numstriping = 3
   integer, parameter :: maxlen = 64
 
@@ -37,7 +40,7 @@ program benchio
 
   double precision, allocatable, dimension(:,:,:) :: iodata
 
-  integer :: rank, size, ierr, comm, cartcomm, iocomm, dblesize
+  integer :: worldrank, worldsize, rank, size, ierr, comm, cartcomm, iocomm, dblesize
   integer, dimension(ndim) :: dims, coords
 
   integer, parameter :: iounit = 12
@@ -66,6 +69,7 @@ program benchio
   iostring(5) = " HDF5 "
   iostring(6) = "NetCDF"
   iostring(7) = "Adios2"
+  iostring(8) = "Linear"
 
   iolayername(1) = "serial"
   iolayername(2) = "proc"
@@ -74,13 +78,30 @@ program benchio
   iolayername(5) = "hdf5"
   iolayername(6) = "netcdf"
   iolayername(7) = "adios"
+  iolayername(8) = "linear"
 
   call MPI_Init(ierr)
 
   comm = MPI_COMM_WORLD
 
+  call MPI_Comm_size(comm, worldsize, ierr)
+  call MPI_Comm_rank(comm, worldrank, ierr)
+
+  !  call MPI_Comm_split(MPI_COMM_WORLD, (2*worldrank)/worldsize, worldrank, comm, ierr)
+
+  !  call MPI_Comm_split(MPI_COMM_WORLD, mod(worldrank,2), worldrank, comm, ierr)
+  write(*,*) "worldrank, mod = ", worldrank,  (2*mod(worldrank,128))/128
+
+  call MPI_Comm_split(MPI_COMM_WORLD, (2*mod(worldrank,128))/128, worldrank, comm, ierr)
+  
+
   call MPI_Comm_size(comm, size, ierr)
   call MPI_Comm_rank(comm, rank, ierr)
+
+  !  if (worldrank < size) then
+  !  if (mod(worldrank,2) == 0) then
+
+  if ((2*mod(worldrank,128))/128 == 0) then
 
   ! Parse the arguments
 
@@ -334,6 +355,9 @@ program benchio
         case(7)
            call adioswrite(filename, iodata, n1, n2, n3, iocomm)
 
+        case(8)
+           call linearwrite(filename, iodata, n1, n2, n3, iocomm)
+
         case default
            write(*,*) "Illegal value of iolayer = ", iolayer
            stop
@@ -374,6 +398,8 @@ program benchio
      write(*,*) "Finished"
      write(*,*) "--------"
      write(*,*)
+  end if
+
   end if
 
   call MPI_Finalize(ierr)

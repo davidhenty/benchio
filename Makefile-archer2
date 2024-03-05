@@ -1,3 +1,4 @@
+
 MF=	Makefile-archer2
 
 # You will need to load some modules:
@@ -23,6 +24,7 @@ SRC= \
 	netcdf.f90 \
 	hdf5.f90 \
 	adios.f90 \
+	linear.f90 \
 	benchutil.f90
 
 
@@ -45,7 +47,7 @@ $(EXE):	$(OBJ)
 
 $(OBJ):	$(MF)
 
-benchio.o: serial.o mpiio.o benchutil.o netcdf.o hdf5.o adios.o
+benchio.o: serial.o mpiio.o benchutil.o netcdf.o hdf5.o adios.o linear.o
 
 clean:
 	rm -f $(OBJ) $(EXE) *.mod core

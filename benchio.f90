@@ -10,6 +10,8 @@ program benchio
 
   implicit none
 
+  integer, parameter :: ndim = 3
+
   integer, parameter :: numiolayer = 7
   integer, parameter :: numstriping = 3
   integer, parameter :: maxlen = 64

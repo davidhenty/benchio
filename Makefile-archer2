@@ -21,9 +21,9 @@ SRC= \
 	mpiio.f90 \
 	serial.f90 \
 	netcdf.f90 \
-	hdf5.f90 \
-	adios.f90 \
-	benchutil.f90
+        hdf5.f90 \
+        adios.f90 \
+	benchutil.f90 \
 
 
 #

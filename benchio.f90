@@ -8,7 +8,7 @@ program benchio
   use ioserial
   use iohdf5
   use ionetcdf
-!  use adios
+  use adios
 
   implicit none
 
@@ -335,8 +335,8 @@ program benchio
         case(6)
            call netcdfwrite(filename, iodata, n1, n2, n3, iocomm)
 
-!        case(7)
-!           call adioswrite(filename, iodata, n1, n2, n3, iocomm)
+        case(7)
+           call adioswrite(filename, iodata, n1, n2, n3, iocomm)
 
         case default
            write(*,*) "Illegal value of iolayer = ", iolayer

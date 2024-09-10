@@ -1,11 +1,12 @@
 module mpiio
 
-  use mpi
   implicit none
 
 contains
 
 subroutine mpiiowrite(filename, iodata, n1, n2, n3, cartcomm)
+
+  use mpi
 
   integer, parameter :: ndim = 3
 

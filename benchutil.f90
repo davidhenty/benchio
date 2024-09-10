@@ -2,8 +2,6 @@ module benchcomm
 
   ! Various MPI-related support routines
 
-  use mpi
-
   implicit none
 
   integer :: nodecomm, nodebosscomm, nodenum
@@ -11,6 +9,8 @@ module benchcomm
 contains
 
   subroutine initbenchnode(comm)
+
+    use mpi
 
     integer :: comm
 

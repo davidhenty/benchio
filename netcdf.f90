@@ -1,13 +1,14 @@
 module ionetcdf
 
   use netcdf
-  use mpi
   
   implicit none
 
 contains
 
 subroutine netcdfwrite(filename, iodata, n1, n2, n3, cartcomm)
+
+  use mpi
 
   integer, parameter :: ndim = 3
 

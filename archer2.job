@@ -4,8 +4,8 @@
 #SBATCH --job-name=benchio
 #SBATCH --time=00:05:00
 #SBATCH --output=%x-%j.out
-#SBATCH --nodes=16
-#SBATCH --tasks-per-node=128
+#SBATCH --nodes=1
+#SBATCH --tasks-per-node=1
 #SBATCH --cpus-per-task=1
 #SBATCH --qos=short
 #SBATCH --partition=standard
@@ -29,8 +29,5 @@ ulimit -s unlimited
 # Magic setting to improve IO performance with default MPI
 export FI_OFI_RXM_SAR_LIMIT=64K
 
-export MPICH_MPIIO_AGGREGATOR_PLACEMENT_DISPLAY=1
-MPICH_MPIIO_STATS=1
-
 srun --unbuffered --distribution=block:block \
-     ./benchio 128 128 128 local mpiio
+     ./benchio 512 512 512 local serial unstriped

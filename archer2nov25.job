@@ -1,0 +1,39 @@
+#!/bin/bash
+
+# Slurm job options (name, compute nodes, job time)
+#SBATCH --job-name=benchio
+#SBATCH --time=00:05:00
+#SBATCH --output=%x-%j.out
+#SBATCH --nodes=1
+#SBATCH --tasks-per-node=1
+#SBATCH --cpus-per-task=1
+#SBATCH --partition=standard
+
+# Use these options for the reserved queue during the course
+#SBATCH --qos=reservation
+#SBATCH --reservation=ta216_1640712
+
+# Use these options outside of the course
+# #SBATCH --qos=short
+
+module use /work/z19/shared/sfarr/modulefiles
+module load adios/2.8.3
+module load cray-hdf5-parallel
+module load cray-netcdf-hdf5parallel
+
+# Set the number of threads to 1
+#   This prevents any threaded system libraries from automatically
+#   using threading.
+
+export OMP_NUM_THREADS=1
+export SRUN_CPUS_PER_TASK=${SLURM_CPUS_PER_TASK}
+
+ulimit -s unlimited
+
+# Launch the parallel job
+
+# Magic setting to improve IO performance with default MPI
+export FI_OFI_RXM_SAR_LIMIT=64K
+
+srun --unbuffered --distribution=block:block \
+     ./benchio 512 512 512 local serial unstriped

@@ -8,13 +8,13 @@ program benchio
   use ioserial
   use iohdf5
   use ionetcdf
-  use adios
+!  use adios
 
   implicit none
 
   integer, parameter :: ndim = 3
 
-  integer, parameter :: numiolayer = 7
+  integer, parameter :: numiolayer = 8
   integer, parameter :: numstriping = 3
   integer, parameter :: maxlen = 64
 
@@ -28,7 +28,7 @@ program benchio
 
   character*(maxlen) :: filename, suffix
 
-  integer :: iolayer, istriping, iolayermulti, iolayernode, numarg, iarg
+  integer :: iolayer, istriping, numarg, iarg
 
 ! Set local array size - global sizes l1, l2 and l3 are scaled
 ! by number of processes in each dimension
@@ -54,30 +54,42 @@ program benchio
 
   double precision :: t0, t1, time, iorate, gibdata
 
+  integer, parameter :: iolayerserial  = 1, &
+                        iolayermulti   = 2, &
+                        iolayerbatch   = 3, &
+                        iolayernode    = 4, &
+                        iolayermpiio   = 5, &
+                        iolayerhdf5    = 6, &
+                        iolayernetcdf  = 7, &
+                        iolayeradios   = 8
+  
+  iostring(iolayerserial) = "Serial"
+  iolayername(iolayerserial) = "serial"
+
+  iostring(iolayermulti) = " Proc "
+  iolayername(iolayermulti) = "proc"
+
+  iostring(iolayerbatch) = " Batch"
+  iolayername(iolayerbatch) = "batch"
+
+  iostring(iolayernode) = " Node "
+  iolayername(iolayernode) = "node"
+
+  iostring(iolayermpiio) = "MPI-IO"
+  iolayername(iolayermpiio) = "mpiio"
+
+  iostring(iolayerhdf5) = " HDF5 "
+  iolayername(iolayerhdf5) = "hdf5"
+
+  iostring(iolayernetcdf) = "NetCDF"
+  iolayername(iolayernetcdf) = "netcdf"
+
+  iostring(iolayeradios) = "Adios2"
+  iolayername(iolayeradios) = "adios"
+
   stripestring(1) = "unstriped"
   stripestring(2) = "striped"
   stripestring(3) = "fullstriped"
-
-! These versions are special as they creates many files so need to record this
-
-  iolayermulti = 2
-  iolayernode  = 3
-  
-  iostring(1) = "Serial"
-  iostring(2) = " Proc"
-  iostring(3) = " Node "
-  iostring(4) = "MPI-IO"
-  iostring(5) = " HDF5 "
-  iostring(6) = "NetCDF"
-  iostring(7) = "Adios2"
-
-  iolayername(1) = "serial"
-  iolayername(2) = "proc"
-  iolayername(3) = "node"
-  iolayername(4) = "mpiio"
-  iolayername(5) = "hdf5"
-  iolayername(6) = "netcdf"
-  iolayername(7) = "adios"
 
   call MPI_Init(ierr)
 
@@ -96,7 +108,7 @@ program benchio
   if (numarg < 4) then
 
      if (rank == 0) then
-        write(*,*) "usage: benchio (n1, n2, n3) (local|global) [serial] [proc] [node]"
+        write(*,*) "usage: benchio (n1, n2, n3) (local|global) [serial] [proc] [batch] [node]"
         write(*,*) "       [mpiio] [hdf5] [netcdf] [adios] [unstriped] [striped] [fullstriped]"
      end if
 
@@ -280,16 +292,6 @@ program benchio
         write(*,*)
      end if
 
-!     if (iolayer == 3 .or. iolayer == 4) then
-!
-!        if (rank == 0) then
-!           write(*,*) "WARNING: Skipping ", iostring(iolayer)
-!        end if
-!
-!        cycle
-!
-!     end if
-
      do istriping = 1, numstriping
 
         if (.not. dostripe(istriping)) cycle
@@ -301,11 +303,11 @@ program benchio
 
         ! Deal with multiple files
 
-        if (iolayer == iolayermulti) then
+        if (iolayer == iolayermulti .or. iolayer == iolayerbatch) then
            iocomm = MPI_COMM_SELF
            write(suffix,fmt="(i6.6)") rank
         end if
-           
+
         if (iolayer == iolayernode) then
            iocomm = nodecomm
            write(suffix,fmt="(i6.6)") nodenum
@@ -323,20 +325,26 @@ program benchio
 
         select case (iolayer)
 
-        case(1:3)
+        case(iolayerserial, iolayermulti, iolayernode)
            call serialwrite(filename, iodata, n1, n2, n3, iocomm)
 
-        case(4)
+        case(iolayerbatch)
+           call batchwrite(filename, iodata, n1, n2, n3, nodecomm)
+
+        case(iolayermpiio)
            call mpiiowrite(filename, iodata, n1, n2, n3, iocomm)
 
-        case(5)
+        case(iolayerhdf5)
            call hdf5write(filename, iodata, n1, n2, n3, iocomm)
 
-        case(6)
+        case(iolayernetcdf)
            call netcdfwrite(filename, iodata, n1, n2, n3, iocomm)
 
-        case(7)
-           call adioswrite(filename, iodata, n1, n2, n3, iocomm)
+        case(iolayeradios)
+           !           call adioswrite(filename, iodata, n1, n2, n3, iocomm)
+           if (rank == 0) then
+              write(*,*) "Adios2 not supported: skipping"
+           end if
 
         case default
            write(*,*) "Illegal value of iolayer = ", iolayer
@@ -355,16 +363,16 @@ program benchio
         end if
 
         ! Rank 0 in iocomm deletes
-        if (iolayer == 7) then
-          ! ADIOS makes a directory so the file deletion function will not work
-          ! use the shell instead
+        if (iolayer == iolayeradios) then
 
-          call MPI_Barrier(comm, ierr)
-          if (rank == 0) then
-            call execute_command_line("rm -r "//filename)
-          end if 
-          call MPI_Barrier(comm, ierr)
-        
+           ! ADIOS makes a directory so file deletion function will not work
+           ! use the shell instead
+           call MPI_Barrier(comm, ierr)
+           if (rank == 0) then
+!              call execute_command_line("rm -r "//filename)
+           end if
+           call MPI_Barrier(comm, ierr)
+
         else
            call bossdelete(filename, iocomm)
         endif
